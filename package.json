@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node build.mjs --dev",
     "build": "node build.mjs",
-    "start": "node build/index.js"
+    "start": "node build.mjs && node build/index.js"
   },
   "dependencies": {
     "@fastify/compress": "^8.0.1",
