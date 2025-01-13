@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "node build.mjs --dev",
-    "build": "node build.mjs",
-    "start": "node build/index.js"
+    "build": "node --version",
+    "start": "node"
   },
   "dependencies": {
     "@fastify/compress": "^8.0.1",
