@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node build.mjs --dev",
     "build": "node --version",
-    "start": "while :; do sleep 2073600; done"
+    "start": "node build.mjs --dev"
   },
   "dependencies": {
     "@fastify/compress": "^8.0.1",
