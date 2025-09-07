@@ -33,6 +33,34 @@ export class Blueprints extends System {
     }
   }
 
+  
+  isBlueprintRelatedError(error, blueprintId) {
+    // Check if error is related to app loading, scripting, or model loading
+    const blueprintErrorTypes = [
+      'app.script.load',
+      'app.model.load', 
+      'app.script.compile',
+      'app.script.runtime',
+      'blueprint.validation',
+      'gltfloader.error'
+    ];
+    
+    if (!blueprintErrorTypes.includes(error.type)) {
+      return false;
+    }
+    
+    // Additional checks for blueprint-specific errors
+    // Check if error message contains blueprint-specific identifiers
+    const errorMessage = error.args ? error.args.join(' ').toLowerCase() : '';
+    
+    // Look for script-related errors that would be blueprint specific
+    if (error.type.startsWith('app.script') || error.type.startsWith('app.model')) {
+      return true;
+    }
+    
+    return false;
+  }
+
   async executeWithErrorMonitoring(blueprintId, operation) {
     const errorMonitor = this.world.errorMonitor
     if (!errorMonitor) {
