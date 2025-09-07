@@ -40,7 +40,10 @@ export class ClientNetwork extends System {
   }
 
   send(name, data) {
-    // console.log('->', name, data)
+    const ignore = ['ping'];
+    if(!ignore.includes(name) && data.id != this.id) {
+      console.log('->', name, data);
+    }
     const packet = writePacket(name, data)
     this.ws.send(packet)
   }
@@ -210,6 +213,21 @@ export class ClientNetwork extends System {
 
   onKick = code => {
     this.world.emit('kick', code)
+  }
+
+  onErrors = (data) => {
+    // Received error data from server
+    this.world.emit('errors', data)
+  }
+
+  // Helper method to request errors from server
+  requestErrors(options = {}) {
+    this.send('getErrors', options)
+  }
+
+  // Helper method to clear server errors (admin only)
+  clearErrors() {
+    this.send('clearErrors')
   }
 
   onClose = code => {

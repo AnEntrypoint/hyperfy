@@ -6,14 +6,17 @@ import { ServerNetwork } from './systems/ServerNetwork'
 import { ServerLoader } from './systems/ServerLoader'
 import { ServerEnvironment } from './systems/ServerEnvironment'
 import { ServerMonitor } from './systems/ServerMonitor'
+import { ErrorMonitor } from './systems/ErrorMonitor'
 
 export function createServerWorld() {
   const world = new World()
+  world.isServer = true
   world.register('server', Server)
   world.register('livekit', ServerLiveKit)
   world.register('network', ServerNetwork)
   world.register('loader', ServerLoader)
   world.register('environment', ServerEnvironment)
   world.register('monitor', ServerMonitor)
+  // world.register('errorMonitor', ErrorMonitor) // Temporarily disabled for testing
   return world
 }
