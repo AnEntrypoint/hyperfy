@@ -570,30 +570,6 @@ export class ServerNetwork extends System {
     }
   }
 
-  onGetErrors = (socket, options) => {
-    // Send error history to requesting client
-    if (this.world.errorMonitor) {
-      const errors = this.world.errorMonitor.getErrors(options)
-      socket.send('errors', { errors, stats: this.world.errorMonitor.getStats() })
-    }
-  }
-
-  onClearErrors = (socket) => {
-    // Clear error history (admin only)
-    if (!socket.player.isAdmin()) {
-      return console.error('player attempted to clear errors without admin permission')
-    }
-    if (this.world.errorMonitor) {
-      const count = this.world.errorMonitor.clearErrors()
-      socket.send('chatAdded', {
-        id: uuid(),
-        from: null,
-        fromId: null,
-        body: `Cleared ${count} error(s)`,
-        createdAt: moment().toISOString(),
-      })
-    }
-  }
 
   // MCP Error Monitoring Integration Methods
   onMcpGetErrors = (socket, options = {}) => {

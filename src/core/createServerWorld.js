@@ -17,6 +17,6 @@ export function createServerWorld() {
   world.register('loader', ServerLoader)
   world.register('environment', ServerEnvironment)
   world.register('monitor', ServerMonitor)
-  // world.register('errorMonitor', ErrorMonitor) // Temporarily disabled for testing
+  world.register('errorMonitor', ErrorMonitor)
   return world
 }

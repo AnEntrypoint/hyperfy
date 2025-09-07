@@ -13,6 +13,7 @@ import { Entities } from './systems/Entities'
 import { Physics } from './systems/Physics'
 import { Stage } from './systems/Stage'
 import { Scripts } from './systems/Scripts'
+import { ErrorMonitor } from './systems/ErrorMonitor'
 
 export class World extends EventEmitter {
   constructor() {
@@ -35,6 +36,8 @@ export class World extends EventEmitter {
     this.camera = new THREE.PerspectiveCamera(70, 0, 0.2, 1200)
     this.rig.add(this.camera)
 
+    // Initialize ErrorMonitor first to capture initialization errors
+    this.register('errorMonitor', ErrorMonitor)
     this.register('settings', Settings)
     this.register('collections', Collections)
     this.register('apps', Apps)
