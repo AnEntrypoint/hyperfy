@@ -35,30 +35,67 @@ export class Blueprints extends System {
 
   
   isBlueprintRelatedError(error, blueprintId) {
-    // Check if error is related to app loading, scripting, or model loading
-    const blueprintErrorTypes = [
+    // Always capture errors during blueprint operations - they could be part of error chains
+    // that originate from various sources like script execution, model loading, or async operations
+    
+    // Check for explicit blueprint-related error types
+    const explicitBlueprintErrors = [
       'app.script.load',
       'app.model.load', 
       'app.script.compile',
       'app.script.runtime',
       'blueprint.validation',
-      'gltfloader.error'
+      'gltfloader.error',
+      'console.error',
+      'console.warn'
     ];
     
-    if (!blueprintErrorTypes.includes(error.type)) {
-      return false;
-    }
-    
-    // Additional checks for blueprint-specific errors
-    // Check if error message contains blueprint-specific identifiers
-    const errorMessage = error.args ? error.args.join(' ').toLowerCase() : '';
-    
-    // Look for script-related errors that would be blueprint specific
-    if (error.type.startsWith('app.script') || error.type.startsWith('app.model')) {
+    if (explicitBlueprintErrors.includes(error.type)) {
       return true;
     }
     
-    return false;
+    // Check error message content for blueprint-related patterns
+    const errorMessage = error.args ? error.args.join(' ').toLowerCase() : '';
+    const stack = error.stack ? error.stack.toLowerCase() : '';
+    
+    // Comprehensive pattern matching for all possible error sources
+    const errorPatterns = [
+      'gltfloader',
+      'syntaxerror', 
+      'unexpected token',
+      'json.parse',
+      'failed to load',
+      'failed to parse',
+      'referenceerror',
+      'typeerror',
+      'cannot read',
+      'is not defined',
+      'is not a function',
+      'model.load',
+      'script.load',
+      'asset loading',
+      'three.js',
+      'webgl',
+      'shader',
+      'texture',
+      'geometry',
+      'material',
+      blueprintId // Always include blueprint ID matches
+    ];
+    
+    // Check both error message and stack trace
+    const hasErrorPattern = errorPatterns.some(pattern => 
+      errorMessage.includes(pattern) || stack.includes(pattern)
+    );
+    
+    if (hasErrorPattern) {
+      return true;
+    }
+    
+    // For any errors that occur during blueprint operations, assume they could be related
+    // This ensures we capture error chains that might originate from blueprint changes
+    // but manifest as different error types
+    return true; // Capture ALL errors during blueprint operations to catch error chains
   }
 
   async executeWithErrorMonitoring(blueprintId, operation) {
@@ -68,25 +105,35 @@ export class Blueprints extends System {
       return await operation()
     }
 
-    // Capture error count before operation
+    // Capture ALL errors globally for 1 second to catch error chains
+    // Error chains can propagate through async operations, model loading, 
+    // script compilation, and other delayed processes
     const errorsBefore = errorMonitor.errors.length
     
     // Execute the operation
     const result = await operation()
 
-    // Wait briefly to catch immediate errors
-    await new Promise(resolve => setTimeout(resolve, 100))
+    // Wait 1 full second to capture any error chains that might propagate
+    // This catches:
+    // - Immediate errors (0-100ms)
+    // - Async operation errors (100-500ms) 
+    // - Model loading chain errors (500ms-1s)
+    // - Script compilation cascading errors (up to 1s)
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Check for new errors
+    // Capture ALL new errors that occurred during this window
     const errorsAfter = errorMonitor.errors.length
     if (errorsAfter > errorsBefore) {
       const newErrors = errorMonitor.errors.slice(errorsBefore)
+      
+      // Since error chains can be complex, capture ALL errors during blueprint operations
+      // The isBlueprintRelatedError method will return true for everything during this window
       const blueprintErrors = newErrors.filter(error => 
         this.isBlueprintRelatedError(error, blueprintId)
       )
       
       if (blueprintErrors.length > 0) {
-        // Include errors in the response
+        // Include ALL errors in the response for complete error chain visibility
         return {
           ...result,
           success: false,
@@ -95,25 +142,19 @@ export class Blueprints extends System {
             message: error.args.join(' '),
             stack: error.stack,
             timestamp: error.timestamp,
-            critical: errorMonitor.isCriticalError(error.type, error.args)
-          }))
+            critical: errorMonitor.isCriticalError ? errorMonitor.isCriticalError(error.type, error.args) : true,
+            // Add context about when this error occurred relative to blueprint operation
+            timeFromOperation: new Date(error.timestamp) - Date.now() + 1000
+          })),
+          // Additional metadata about the error capture window
+          errorCaptureWindow: '1000ms',
+          totalErrorsCaptured: newErrors.length,
+          blueprintRelatedErrors: blueprintErrors.length
         }
       }
     }
     
     return result
-  }
-
-  isBlueprintRelatedError(error, blueprintId) {
-    const errorMessage = error.args.join(' ').toLowerCase()
-    return (
-      errorMessage.includes('gltfloader') ||
-      errorMessage.includes('syntaxerror') ||
-      errorMessage.includes('unexpected token') ||
-      errorMessage.includes('json.parse') ||
-      errorMessage.includes('failed to load') ||
-      errorMessage.includes(blueprintId)
-    )
   }
 
   async modify(data) {
