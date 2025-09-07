@@ -25,6 +25,8 @@ const names = [
   'kick',
   'ping',
   'pong',
+  'getErrors',
+  'clearErrors',
 ]
 
 const byName = {}
