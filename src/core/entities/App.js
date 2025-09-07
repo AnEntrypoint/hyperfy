@@ -80,6 +80,10 @@ export class App extends Entity {
         root = glb.toNodes()
       } catch (err) {
         console.error(err)
+        // Forward to ErrorMonitor if available
+        if (this.world.errorMonitor) {
+          this.world.errorMonitor.captureError('app.model.load', [err.message], err.stack || '')
+        }
         crashed = true
         // no model, will use crash block below
       }
@@ -90,6 +94,10 @@ export class App extends Entity {
           if (!script) script = await this.world.loader.load('script', blueprint.script)
         } catch (err) {
           console.error(err)
+          // Forward to ErrorMonitor if available
+          if (this.world.errorMonitor) {
+            this.world.errorMonitor.captureError('app.script.load', [err.message], err.stack || '')
+          }
           crashed = true
         }
       }
