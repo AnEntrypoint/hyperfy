@@ -383,6 +383,22 @@ export class ErrorMonitor extends System {
     })
   }
 
+  // KISS: Minimal method to receive MCP error reports
+  onErrorReport = (socket, errorData) => {
+    if (!this.isServer) return
+    
+    const error = {
+      ...errorData,
+      timestamp: new Date().toISOString(),
+      side: 'client-reported'
+    }
+    
+    this.errors.push(error)
+    if (this.errors.length > this.maxErrors) {
+      this.errors.shift()
+    }
+  }
+
   destroy() {
     this.restore()
     this.listeners.clear()

@@ -74,7 +74,7 @@ export class App extends Entity {
     // otherwise we can load the model and script
     else {
       try {
-        const type = blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
+        const type = blueprint.model && blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
         let glb = this.world.loader.get(type, blueprint.model)
         if (!glb) glb = await this.world.loader.load(type, blueprint.model)
         root = glb.toNodes()

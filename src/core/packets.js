@@ -25,6 +25,7 @@ const names = [
   'kick',
   'ping',
   'pong',
+  'errorReport',
   'getErrors',
   'clearErrors',
 ]
