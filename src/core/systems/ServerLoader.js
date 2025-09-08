@@ -121,17 +121,14 @@ export class ServerLoader extends System {
               this.results.set(key, model)
               resolve(model)
             },
-            // onError callback - CRITICAL FIX: Capture GLTF parsing errors
+            // onError callback - Capture GLTF parsing errors
             err => {
-              console.error('GLTF parsing error:', err)
-              
-              // Send error to ErrorMonitor for WebSocket transmission
+              // Send error to ErrorMonitor for MCP transmission
               if (this.world.errorMonitor) {
                 this.world.errorMonitor.captureError('gltfloader.error', {
                   message: err.message || String(err),
                   url: url,
-                  type: 'model',
-                  error: err
+                  type: 'model'
                 }, err.stack)
               }
               
@@ -139,15 +136,12 @@ export class ServerLoader extends System {
             }
           )
         } catch (err) {
-          console.error('Model loading error:', err)
-          
-          // Send error to ErrorMonitor for WebSocket transmission
+          // Send error to ErrorMonitor for MCP transmission
           if (this.world.errorMonitor) {
             this.world.errorMonitor.captureError('model.load.error', {
               message: err.message || String(err),
               url: url,
-              type: 'model',
-              error: err
+              type: 'model'
             }, err.stack)
           }
           
@@ -171,17 +165,14 @@ export class ServerLoader extends System {
               this.results.set(key, emote)
               resolve(emote)
             },
-            // onError callback - CRITICAL FIX: Capture GLTF parsing errors
+            // onError callback - Capture GLTF parsing errors
             err => {
-              console.error('GLTF emote parsing error:', err)
-              
-              // Send error to ErrorMonitor for WebSocket transmission
+              // Send error to ErrorMonitor for MCP transmission
               if (this.world.errorMonitor) {
                 this.world.errorMonitor.captureError('gltfloader.error', {
                   message: err.message || String(err),
                   url: url,
-                  type: 'emote',
-                  error: err
+                  type: 'emote'
                 }, err.stack)
               }
               
@@ -189,15 +180,12 @@ export class ServerLoader extends System {
             }
           )
         } catch (err) {
-          console.error('Emote loading error:', err)
-          
-          // Send error to ErrorMonitor for WebSocket transmission
+          // Send error to ErrorMonitor for MCP transmission
           if (this.world.errorMonitor) {
             this.world.errorMonitor.captureError('emote.load.error', {
               message: err.message || String(err),
               url: url,
-              type: 'emote', 
-              error: err
+              type: 'emote'
             }, err.stack)
           }
           
