@@ -556,7 +556,6 @@ export class ServerNetwork extends System {
     socket.send('pong', time)
   }
 
-  // Essential MCP Error Monitoring Methods
   onErrorReport = (socket, data) => {
     if (this.world.errorMonitor) {
       this.world.errorMonitor.receiveClientError({
@@ -570,13 +569,13 @@ export class ServerNetwork extends System {
 
   onMcpSubscribeErrors = (socket, options = {}) => {
     if (!this.world.errorMonitor) return
-    
+
     const errorListener = (event, errorData) => {
       if (event === 'error' || event === 'critical') {
         socket.send('mcpErrorEvent', errorData)
       }
     }
-    
+
     socket.mcpErrorListener = errorListener
     socket.mcpErrorSubscription = { active: true, options }
     this.world.errorMonitor.listeners.add(errorListener)
@@ -602,14 +601,13 @@ export class ServerNetwork extends System {
   }
 
   onDisconnect = (socket, code) => {
-    // Clean up MCP error monitoring subscriptions
     if (socket.mcpErrorListener && this.world.errorMonitor) {
       this.world.errorMonitor.listeners.delete(socket.mcpErrorListener)
     }
     if (socket.mcpErrorSubscription) {
       socket.mcpErrorSubscription.active = false
     }
-    
+
     this.world.livekit.clearModifiers(socket.id)
     socket.player.destroy(true)
     this.sockets.delete(socket.id)

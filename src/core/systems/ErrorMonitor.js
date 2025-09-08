@@ -2,11 +2,6 @@ import { System } from './System'
 
 /**
  * Error Monitor System
- * 
- * - Centralizes error capture from all subsystems
- * - Streams errors to MCP tooling via WebSocket
- * - Correlates client/server errors with context
- * - Provides real-time debugging capabilities
  */
 export class ErrorMonitor extends System {
   constructor(world) {
@@ -18,11 +13,11 @@ export class ErrorMonitor extends System {
     this.listeners = new Set()
     this.originalConsole = {}
     this.errorId = 0
-    
+
     // Initialize error capture
     this.interceptConsole()
     this.interceptGlobalErrors()
-    
+
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 60000) // Every minute
   }
@@ -91,7 +86,7 @@ export class ErrorMonitor extends System {
     }
 
     this.errors.push(errorEntry)
-    
+
     // Maintain max size
     if (this.errors.length > this.maxErrors) {
       this.errors.shift()
@@ -100,12 +95,10 @@ export class ErrorMonitor extends System {
     // Notify listeners
     this.notifyListeners('error', errorEntry)
 
-    // Stream to MCP if configured
     if (this.enableRealTimeStreaming && this.mcpEndpoint) {
       this.streamToMCP(errorEntry)
     }
 
-    // Special handling for critical errors
     if (this.isCriticalError(type, args)) {
       this.handleCriticalError(errorEntry)
     }
@@ -139,7 +132,7 @@ export class ErrorMonitor extends System {
 
   cleanStack(stack) {
     if (!stack) return null
-    
+
     return stack
       .split('\n')
       .filter(line => {
@@ -196,7 +189,7 @@ export class ErrorMonitor extends System {
         external: usage.external
       }
     }
-    
+
     if (this.isClient && typeof performance !== 'undefined' && performance.memory) {
       return {
         used: performance.memory.usedJSHeapSize,
@@ -204,7 +197,7 @@ export class ErrorMonitor extends System {
         limit: performance.memory.jsHeapSizeLimit
       }
     }
-    
+
     return null
   }
 
@@ -233,14 +226,13 @@ export class ErrorMonitor extends System {
     } else {
       message = String(args || '').toLowerCase()
     }
-    
+
     return criticalPatterns.some(pattern => pattern.test(message))
   }
 
   handleCriticalError(errorEntry) {
-    // Send critical error notification
     this.notifyListeners('critical', errorEntry)
-    
+
     // Log to server if client
     if (this.isClient && this.world.network) {
       this.world.network.send('errorReport', {
@@ -251,7 +243,6 @@ export class ErrorMonitor extends System {
   }
 
   streamToMCP(errorEntry) {
-    // Send to MCP endpoint if configured
     if (typeof fetch !== 'undefined') {
       fetch(this.mcpEndpoint, {
         method: 'POST',
@@ -263,7 +254,6 @@ export class ErrorMonitor extends System {
           data: errorEntry
         })
       }).catch(() => {
-        // Silently ignore MCP streaming errors
       })
     }
   }
@@ -362,32 +352,30 @@ export class ErrorMonitor extends System {
     })
   }
 
-  // KISS: Minimal method to receive MCP error reports
   onErrorReport = (socket, errorData) => {
     if (!this.isServer) return
-    
+
     const error = {
       ...errorData,
       timestamp: new Date().toISOString(),
       side: 'client-reported'
     }
-    
+
     this.errors.push(error)
     if (this.errors.length > this.maxErrors) {
       this.errors.shift()
     }
   }
 
-  // Method for enhanced client-server error correlation (called by ServerNetwork)
   receiveClientError = (errorData) => {
     if (!this.isServer) return
-    
+
     const error = {
       ...errorData,
       timestamp: new Date().toISOString(),
       side: 'client-reported'
     }
-    
+
     this.errors.push(error)
     if (this.errors.length > this.maxErrors) {
       this.errors.shift()
@@ -395,8 +383,7 @@ export class ErrorMonitor extends System {
 
     // Notify listeners for real-time error streaming
     this.notifyListeners('error', error)
-    
-    // Handle critical errors
+
     if (this.isCriticalError(error.type, error.args)) {
       this.handleCriticalError(error)
     }
