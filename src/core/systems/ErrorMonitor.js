@@ -34,41 +34,8 @@ export class ErrorMonitor extends System {
   }
 
   interceptConsole() {
-    // Store original console methods
-    this.originalConsole = {
-      error: console.error,
-      warn: console.warn,
-      log: console.log,
-    }
-
-    // Check if console properties can be modified
-    try {
-      // Try to intercept console.error
-      const originalError = console.error
-      console.error = (...args) => {
-        originalError.apply(console, args)
-        this.captureError('console.error', args, this.getStackTrace())
-      }
-
-      // Try to intercept console.warn  
-      const originalWarn = console.warn
-      console.warn = (...args) => {
-        originalWarn.apply(console, args)
-        this.captureError('console.warn', args, this.getStackTrace())
-      }
-
-      // Only intercept console.log in debug mode
-      if (this.debugMode) {
-        const originalLog = console.log
-        console.log = (...args) => {
-          originalLog.apply(console, args)
-          this.captureError('console.log', args, this.getStackTrace())
-        }
-      }
-    } catch (error) {
-      // If console interception fails (like in some Node.js setups with SES),
-      // we'll rely on global error handlers only (silent fallback)
-    }
+    // Note: Console interception disabled due to SES restrictions
+    // Using global error handlers for error capture instead
   }
 
   interceptGlobalErrors() {
