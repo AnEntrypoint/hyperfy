@@ -251,10 +251,23 @@ export class ErrorMonitor extends System {
       /network.*error/i,
       /script.*crashed/i,
       /three\.js/i,
-      /webgl/i
+      /webgl/i,
+      /blueprint.*not.*found/i,
+      /app\.blueprint\.missing/i
     ]
 
-    const message = args.join(' ').toLowerCase()
+    // Handle case where args might not be an array
+    let message = ''
+    if (Array.isArray(args)) {
+      message = args.join(' ').toLowerCase()
+    } else if (args && typeof args === 'string') {
+      message = args.toLowerCase()
+    } else if (args && typeof args === 'object') {
+      message = JSON.stringify(args).toLowerCase()
+    } else {
+      message = String(args || '').toLowerCase()
+    }
+    
     return criticalPatterns.some(pattern => pattern.test(message))
   }
 
@@ -396,6 +409,30 @@ export class ErrorMonitor extends System {
     this.errors.push(error)
     if (this.errors.length > this.maxErrors) {
       this.errors.shift()
+    }
+  }
+
+  // Method for enhanced client-server error correlation (called by ServerNetwork)
+  receiveClientError = (errorData) => {
+    if (!this.isServer) return
+    
+    const error = {
+      ...errorData,
+      timestamp: new Date().toISOString(),
+      side: 'client-reported'
+    }
+    
+    this.errors.push(error)
+    if (this.errors.length > this.maxErrors) {
+      this.errors.shift()
+    }
+
+    // Notify listeners for real-time error streaming
+    this.notifyListeners('error', error)
+    
+    // Handle critical errors
+    if (this.isCriticalError(error.type, error.args)) {
+      this.handleCriticalError(error)
     }
   }
 
