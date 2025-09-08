@@ -14,8 +14,7 @@ export class ErrorMonitor extends System {
     this.originalConsole = {}
     this.errorId = 0
 
-    // Initialize error capture
-    this.interceptConsole()
+    // Initialize error capture - only use global handlers due to SES restrictions
     this.interceptGlobalErrors()
 
     // Set up periodic cleanup
@@ -28,10 +27,6 @@ export class ErrorMonitor extends System {
     this.debugMode = options.debugMode === true
   }
 
-  interceptConsole() {
-    // Note: Console interception disabled due to SES restrictions
-    // Using global error handlers for error capture instead
-  }
 
   interceptGlobalErrors() {
     if (this.isClient && typeof window !== 'undefined') {
@@ -95,6 +90,12 @@ export class ErrorMonitor extends System {
     // Notify listeners
     this.notifyListeners('error', errorEntry)
 
+    // CRITICAL FIX: Send ALL client errors to server via WebSocket immediately
+    if (this.isClient && this.world.network) {
+      this.sendErrorToServer(errorEntry)
+    }
+
+    // Legacy HTTP streaming (keeping for backward compatibility)
     if (this.enableRealTimeStreaming && this.mcpEndpoint) {
       this.streamToMCP(errorEntry)
     }
@@ -230,10 +231,24 @@ export class ErrorMonitor extends System {
     return criticalPatterns.some(pattern => pattern.test(message))
   }
 
+  sendErrorToServer(errorEntry) {
+    // Send ALL errors to game server via WebSocket 
+    // The server will then relay to MCP - no direct client-to-MCP connection
+    try {
+      this.world.network.send('errorReport', {
+        error: errorEntry,
+        realTime: true // Flag to indicate this is for real-time streaming
+      })
+    } catch (err) {
+      // Fallback to console if network send fails
+      console.warn('Failed to send error to server via WebSocket:', err)
+    }
+  }
+
   handleCriticalError(errorEntry) {
     this.notifyListeners('critical', errorEntry)
 
-    // Log to server if client
+    // Critical errors get additional handling but all errors are already sent via sendErrorToServer
     if (this.isClient && this.world.network) {
       this.world.network.send('errorReport', {
         critical: true,
@@ -265,8 +280,10 @@ export class ErrorMonitor extends System {
   }
 
   notifyListeners(event, data) {
+    console.log(`ErrorMonitor.notifyListeners called with event: ${event}, ${this.listeners.size} listeners registered`)
     this.listeners.forEach(callback => {
       try {
+        console.log('Calling listener callback with event:', event)
         callback(event, data)
       } catch (err) {
         // Don't let listener errors crash the error monitor
@@ -356,14 +373,23 @@ export class ErrorMonitor extends System {
     if (!this.isServer) return
 
     const error = {
-      ...errorData,
+      ...errorData.error,
       timestamp: new Date().toISOString(),
-      side: 'client-reported'
+      side: 'client-reported',
+      socketId: socket.id,
+      realTime: errorData.realTime || false
     }
 
     this.errors.push(error)
     if (this.errors.length > this.maxErrors) {
       this.errors.shift()
+    }
+
+    // CRITICAL FIX: Forward ALL client errors to MCP subscribers immediately
+    this.notifyListeners('error', error)
+
+    if (this.isCriticalError(error.type, error.args) || errorData.critical) {
+      this.notifyListeners('critical', error)
     }
   }
 
@@ -371,9 +397,10 @@ export class ErrorMonitor extends System {
     if (!this.isServer) return
 
     const error = {
-      ...errorData,
+      ...errorData.error || errorData,
       timestamp: new Date().toISOString(),
-      side: 'client-reported'
+      side: 'client-reported',
+      realTime: errorData.realTime || false
     }
 
     this.errors.push(error)
@@ -381,11 +408,11 @@ export class ErrorMonitor extends System {
       this.errors.shift()
     }
 
-    // Notify listeners for real-time error streaming
+    // Notify listeners for real-time error streaming - this sends to MCP subscribers
     this.notifyListeners('error', error)
 
-    if (this.isCriticalError(error.type, error.args)) {
-      this.handleCriticalError(error)
+    if (this.isCriticalError(error.type, error.args) || errorData.critical) {
+      this.notifyListeners('critical', error)
     }
   }
 

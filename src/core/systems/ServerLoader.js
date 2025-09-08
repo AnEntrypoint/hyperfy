@@ -109,17 +109,48 @@ export class ServerLoader extends System {
       promise = new Promise(async (resolve, reject) => {
         try {
           const arrayBuffer = await this.fetchArrayBuffer(url)
-          this.gltfLoader.parse(arrayBuffer, '', glb => {
-            const node = glbToNodes(glb, this.world)
-            const model = {
-              toNodes() {
-                return node.clone(true)
-              },
+          this.gltfLoader.parse(arrayBuffer, '', 
+            // onLoad callback
+            glb => {
+              const node = glbToNodes(glb, this.world)
+              const model = {
+                toNodes() {
+                  return node.clone(true)
+                },
+              }
+              this.results.set(key, model)
+              resolve(model)
+            },
+            // onError callback - CRITICAL FIX: Capture GLTF parsing errors
+            err => {
+              console.error('GLTF parsing error:', err)
+              
+              // Send error to ErrorMonitor for WebSocket transmission
+              if (this.world.errorMonitor) {
+                this.world.errorMonitor.captureError('gltfloader.error', {
+                  message: err.message || String(err),
+                  url: url,
+                  type: 'model',
+                  error: err
+                }, err.stack)
+              }
+              
+              reject(err)
             }
-            this.results.set(key, model)
-            resolve(model)
-          })
+          )
         } catch (err) {
+          console.error('Model loading error:', err)
+          
+          // Send error to ErrorMonitor for WebSocket transmission
+          if (this.world.errorMonitor) {
+            this.world.errorMonitor.captureError('model.load.error', {
+              message: err.message || String(err),
+              url: url,
+              type: 'model',
+              error: err
+            }, err.stack)
+          }
+          
           reject(err)
         }
       })
@@ -128,17 +159,48 @@ export class ServerLoader extends System {
       promise = new Promise(async (resolve, reject) => {
         try {
           const arrayBuffer = await this.fetchArrayBuffer(url)
-          this.gltfLoader.parse(arrayBuffer, '', glb => {
-            const factory = createEmoteFactory(glb, url)
-            const emote = {
-              toClip(options) {
-                return factory.toClip(options)
-              },
+          this.gltfLoader.parse(arrayBuffer, '', 
+            // onLoad callback
+            glb => {
+              const factory = createEmoteFactory(glb, url)
+              const emote = {
+                toClip(options) {
+                  return factory.toClip(options)
+                },
+              }
+              this.results.set(key, emote)
+              resolve(emote)
+            },
+            // onError callback - CRITICAL FIX: Capture GLTF parsing errors
+            err => {
+              console.error('GLTF emote parsing error:', err)
+              
+              // Send error to ErrorMonitor for WebSocket transmission
+              if (this.world.errorMonitor) {
+                this.world.errorMonitor.captureError('gltfloader.error', {
+                  message: err.message || String(err),
+                  url: url,
+                  type: 'emote',
+                  error: err
+                }, err.stack)
+              }
+              
+              reject(err)
             }
-            this.results.set(key, emote)
-            resolve(emote)
-          })
+          )
         } catch (err) {
+          console.error('Emote loading error:', err)
+          
+          // Send error to ErrorMonitor for WebSocket transmission
+          if (this.world.errorMonitor) {
+            this.world.errorMonitor.captureError('emote.load.error', {
+              message: err.message || String(err),
+              url: url,
+              type: 'emote', 
+              error: err
+            }, err.stack)
+          }
+          
           reject(err)
         }
       })
