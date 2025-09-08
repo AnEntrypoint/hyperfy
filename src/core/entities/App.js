@@ -149,6 +149,14 @@ export class App extends Entity {
       } catch (err) {
         console.error('script crashed')
         console.error(err)
+        console.error('DEBUG: App.js error handler called, forwarding to ErrorMonitor')
+        // CRITICAL FIX: Forward to ErrorMonitor for real-time MCP transmission
+        if (this.world.errorMonitor) {
+          console.error('DEBUG: ErrorMonitor available, calling captureError')
+          this.world.errorMonitor.captureError('app.script.execution', [err.message], err.stack || '')
+        } else {
+          console.error('DEBUG: ErrorMonitor NOT available')
+        }
         return this.crash()
       }
     }
@@ -222,6 +230,10 @@ export class App extends Entity {
       } catch (err) {
         console.error('script fixedUpdate crashed', this)
         console.error(err)
+        // CRITICAL FIX: Forward to ErrorMonitor for real-time MCP transmission
+        if (this.world.errorMonitor) {
+          this.world.errorMonitor.captureError('app.script.fixedUpdate', [err.message], err.stack || '')
+        }
         this.crash()
         return
       }
@@ -242,6 +254,10 @@ export class App extends Entity {
       } catch (err) {
         console.error('script update() crashed', this)
         console.error(err)
+        // CRITICAL FIX: Forward to ErrorMonitor for real-time MCP transmission
+        if (this.world.errorMonitor) {
+          this.world.errorMonitor.captureError('app.script.update', [err.message], err.stack || '')
+        }
         this.crash()
         return
       }
@@ -255,6 +271,10 @@ export class App extends Entity {
       } catch (err) {
         console.error('script lateUpdate() crashed', this)
         console.error(err)
+        // CRITICAL FIX: Forward to ErrorMonitor for real-time MCP transmission
+        if (this.world.errorMonitor) {
+          this.world.errorMonitor.captureError('app.script.lateUpdate', [err.message], err.stack || '')
+        }
         this.crash()
         return
       }
