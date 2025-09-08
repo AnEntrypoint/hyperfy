@@ -67,8 +67,7 @@ export class ErrorMonitor extends System {
       }
     } catch (error) {
       // If console interception fails (like in some Node.js setups with SES),
-      // we'll rely on global error handlers only
-      console.warn('ErrorMonitor: Cannot intercept console methods, using global handlers only:', error.message)
+      // we'll rely on global error handlers only (silent fallback)
     }
   }
 
