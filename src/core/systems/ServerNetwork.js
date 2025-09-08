@@ -556,245 +556,37 @@ export class ServerNetwork extends System {
     socket.send('pong', time)
   }
 
+  // Essential MCP Error Monitoring Methods
   onErrorReport = (socket, data) => {
-    // Handle client-side error reports with enhanced correlation
     if (this.world.errorMonitor) {
-      // Use the new receiveClientError method for better client-server correlation
       this.world.errorMonitor.receiveClientError({
         ...data.error,
         clientId: socket.id,
         playerId: socket.player?.data?.id,
-        playerName: socket.player?.data?.name,
-        fromSocket: socket.id
-      })
-    }
-  }
-
-
-  // MCP Error Monitoring Integration Methods
-  onMcpGetErrors = (socket, options = {}) => {
-    // MCP-specific error retrieval with enhanced filtering
-    if (!this.world.errorMonitor) {
-      return socket.send('mcpErrorsResponse', { 
-        error: 'Error monitoring not available',
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    try {
-      const errors = this.world.errorMonitor.getErrors(options)
-      const stats = this.world.errorMonitor.getStats()
-      
-      socket.send('mcpErrorsResponse', {
-        success: true,
-        data: {
-          errors,
-          stats,
-          server: {
-            networkId: this.id,
-            uptime: this.world.time,
-            connectedSockets: this.sockets.size
-          }
-        },
-        timestamp: new Date().toISOString()
-      })
-    } catch (error) {
-      socket.send('mcpErrorsResponse', {
-        error: 'Failed to retrieve errors',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      })
-    }
-  }
-
-  onMcpGetErrorStats = (socket, options = {}) => {
-    // MCP-specific error statistics
-    if (!this.world.errorMonitor) {
-      return socket.send('mcpErrorStatsResponse', { 
-        error: 'Error monitoring not available',
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    try {
-      const stats = this.world.errorMonitor.getStats()
-      const detailedStats = {
-        ...stats,
-        server: {
-          networkId: this.id,
-          uptime: Math.round(this.world.time),
-          connectedSockets: this.sockets.size,
-          memoryUsage: this.world.errorMonitor.getMemoryUsage(),
-          timestamp: new Date().toISOString()
-        }
-      }
-
-      socket.send('mcpErrorStatsResponse', {
-        success: true,
-        data: detailedStats,
-        timestamp: new Date().toISOString()
-      })
-    } catch (error) {
-      socket.send('mcpErrorStatsResponse', {
-        error: 'Failed to retrieve error statistics',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      })
-    }
-  }
-
-  onMcpClearErrors = (socket, options = {}) => {
-    // MCP-specific error clearing (no admin requirement for development)
-    if (!this.world.errorMonitor) {
-      return socket.send('mcpClearErrorsResponse', { 
-        error: 'Error monitoring not available',
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    try {
-      const count = this.world.errorMonitor.clearErrors()
-      
-      socket.send('mcpClearErrorsResponse', {
-        success: true,
-        data: {
-          cleared: count,
-          message: `Cleared ${count} error(s) via MCP`
-        },
-        timestamp: new Date().toISOString()
-      })
-    } catch (error) {
-      socket.send('mcpClearErrorsResponse', {
-        error: 'Failed to clear errors',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      })
-    }
-  }
-
-  onMcpGetGltfErrors = (socket, options = {}) => {
-    // MCP-specific GLTF error filtering
-    if (!this.world.errorMonitor) {
-      return socket.send('mcpGltfErrorsResponse', { 
-        error: 'Error monitoring not available',
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    try {
-      const allErrors = this.world.errorMonitor.getErrors({ limit: 1000 })
-      const gltfErrors = allErrors.filter(error => {
-        const message = JSON.stringify(error.args).toLowerCase()
-        return message.includes('gltf') || 
-               message.includes('gltfloader') ||
-               message.includes('three.js') ||
-               message.includes('.gltf') ||
-               message.includes('.glb')
-      })
-
-      socket.send('mcpGltfErrorsResponse', {
-        success: true,
-        data: {
-          errors: gltfErrors,
-          total: gltfErrors.length,
-          filtered: allErrors.length
-        },
-        timestamp: new Date().toISOString()
-      })
-    } catch (error) {
-      socket.send('mcpGltfErrorsResponse', {
-        error: 'Failed to retrieve GLTF errors',
-        details: error.message,
-        timestamp: new Date().toISOString()
+        playerName: socket.player?.data?.name
       })
     }
   }
 
   onMcpSubscribeErrors = (socket, options = {}) => {
-    // MCP real-time error subscription
-    if (!this.world.errorMonitor) {
-      return socket.send('mcpSubscribeResponse', { 
-        error: 'Error monitoring not available',
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    try {
-      // Store subscription options on socket for filtering
-      socket.mcpErrorSubscription = {
-        active: true,
-        options: {
-          types: options.types || null, // Filter by error types
-          critical: options.critical || false, // Only critical errors
-          side: options.side || null // client/server filter
-        }
+    if (!this.world.errorMonitor) return
+    
+    const errorListener = (event, errorData) => {
+      if (event === 'error' || event === 'critical') {
+        socket.send('mcpErrorEvent', errorData)
       }
-
-      // Add to error monitor listeners if not already added
-      if (!socket.mcpErrorListener) {
-        socket.mcpErrorListener = (event, data) => {
-          if (!socket.mcpErrorSubscription?.active) return
-
-          const { types, critical, side } = socket.mcpErrorSubscription.options
-          
-          // Apply filters
-          if (types && !types.includes(data.type)) return
-          if (critical && !this.world.errorMonitor.isCriticalError(data.type, data.args)) return
-          if (side && data.side !== side) return
-
-          socket.send('mcpErrorEvent', {
-            event,
-            data,
-            timestamp: new Date().toISOString()
-          })
-        }
-        this.world.errorMonitor.addListener(socket.mcpErrorListener)
-      }
-
-      socket.send('mcpSubscribeResponse', {
-        success: true,
-        data: {
-          subscribed: true,
-          options: socket.mcpErrorSubscription.options
-        },
-        timestamp: new Date().toISOString()
-      })
-    } catch (error) {
-      socket.send('mcpSubscribeResponse', {
-        error: 'Failed to subscribe to errors',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      })
     }
-  }
-
-  onMcpUnsubscribeErrors = (socket) => {
-    // MCP real-time error unsubscription
-    try {
-      if (socket.mcpErrorSubscription) {
-        socket.mcpErrorSubscription.active = false
-      }
-
-      socket.send('mcpUnsubscribeResponse', {
-        success: true,
-        data: { unsubscribed: true },
-        timestamp: new Date().toISOString()
-      })
-    } catch (error) {
-      socket.send('mcpUnsubscribeResponse', {
-        error: 'Failed to unsubscribe from errors',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      })
-    }
+    
+    socket.mcpErrorListener = errorListener
+    socket.mcpErrorSubscription = { active: true, options }
+    this.world.errorMonitor.listeners.add(errorListener)
   }
 
   onGetErrors = (socket, options = {}) => {
     if (!this.world.errorMonitor) {
-      socket.send('errors', { errors: [], stats: null, message: 'Error monitoring not available' })
+      socket.send('errors', { errors: [], stats: null })
       return
     }
-    
     const errors = this.world.errorMonitor.getErrors(options)
     const stats = this.world.errorMonitor.getStats()
     socket.send('errors', { errors, stats })
@@ -802,10 +594,9 @@ export class ServerNetwork extends System {
 
   onClearErrors = (socket) => {
     if (!this.world.errorMonitor) {
-      socket.send('clearErrors', { cleared: 0, message: 'Error monitoring not available' })
+      socket.send('clearErrors', { cleared: 0 })
       return
     }
-    
     const count = this.world.errorMonitor.clearErrors()
     socket.send('clearErrors', { cleared: count })
   }

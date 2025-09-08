@@ -28,6 +28,9 @@ const names = [
   'errorReport',
   'getErrors',
   'clearErrors',
+  'errors',
+  'mcpSubscribeErrors',
+  'mcpErrorEvent',
 ]
 
 const byName = {}
