@@ -557,22 +557,49 @@ export class ServerNetwork extends System {
   }
 
   onErrorReport = (socket, data) => {
+    console.log('SERVER RECEIVED errorReport packet:', JSON.stringify(data, null, 2))
+    
+    // Process error through ErrorMonitor first
     if (this.world.errorMonitor) {
       this.world.errorMonitor.receiveClientError({
-        ...data.error,
+        error: data.error || data,
+        realTime: data.realTime || false,
         clientId: socket.id,
         playerId: socket.player?.data?.id,
         playerName: socket.player?.data?.name
       })
+      console.log('SERVER FORWARDED errorReport to ErrorMonitor.receiveClientError')
     }
+    
+    // CRITICAL FIX: Immediately relay ALL client errors to connected MCP servers
+    this.sockets.forEach(mcpSocket => {
+      if (mcpSocket.mcpErrorSubscription?.active) {
+        console.log('SERVER RELAYING errorReport to MCP socket:', mcpSocket.id)
+        mcpSocket.send('mcpErrorEvent', {
+          error: data.error || data,
+          realTime: true,
+          clientId: socket.id,
+          playerId: socket.player?.data?.id,
+          playerName: socket.player?.data?.name,
+          timestamp: new Date().toISOString(),
+          side: 'client-reported'
+        })
+        console.log('SERVER SUCCESSFULLY sent mcpErrorEvent to MCP socket')
+      }
+    })
   }
 
   onMcpSubscribeErrors = (socket, options = {}) => {
     if (!this.world.errorMonitor) return
 
     const errorListener = (event, errorData) => {
+      console.log(`MCP errorListener called with event: ${event}`)
       if (event === 'error' || event === 'critical') {
+        console.log('MCP sending mcpErrorEvent to socket:', JSON.stringify(errorData, null, 2))
         socket.send('mcpErrorEvent', errorData)
+        console.log('MCP mcpErrorEvent sent successfully')
+      } else {
+        console.log('MCP ignoring non-error event:', event)
       }
     }
 
