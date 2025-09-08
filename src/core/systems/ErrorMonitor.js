@@ -232,16 +232,14 @@ export class ErrorMonitor extends System {
   }
 
   sendErrorToServer(errorEntry) {
-    // Send ALL errors to game server via WebSocket 
-    // The server will then relay to MCP - no direct client-to-MCP connection
+    // Send errors to game server via WebSocket for MCP relay
     try {
       this.world.network.send('errorReport', {
         error: errorEntry,
-        realTime: true // Flag to indicate this is for real-time streaming
+        realTime: true
       })
     } catch (err) {
-      // Fallback to console if network send fails
-      console.warn('Failed to send error to server via WebSocket:', err)
+      // Silently fail if network send fails to avoid error loops
     }
   }
 
@@ -280,10 +278,8 @@ export class ErrorMonitor extends System {
   }
 
   notifyListeners(event, data) {
-    console.log(`ErrorMonitor.notifyListeners called with event: ${event}, ${this.listeners.size} listeners registered`)
     this.listeners.forEach(callback => {
       try {
-        console.log('Calling listener callback with event:', event)
         callback(event, data)
       } catch (err) {
         // Don't let listener errors crash the error monitor

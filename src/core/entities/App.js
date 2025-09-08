@@ -149,13 +149,9 @@ export class App extends Entity {
       } catch (err) {
         console.error('script crashed')
         console.error(err)
-        console.error('DEBUG: App.js error handler called, forwarding to ErrorMonitor')
-        // CRITICAL FIX: Forward to ErrorMonitor for real-time MCP transmission
+        // Forward to ErrorMonitor for MCP transmission
         if (this.world.errorMonitor) {
-          console.error('DEBUG: ErrorMonitor available, calling captureError')
           this.world.errorMonitor.captureError('app.script.execution', [err.message], err.stack || '')
-        } else {
-          console.error('DEBUG: ErrorMonitor NOT available')
         }
         return this.crash()
       }
