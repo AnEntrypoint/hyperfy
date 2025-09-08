@@ -54,7 +54,16 @@ export class App extends Entity {
     // fetch blueprint
     const blueprint = this.world.blueprints.get(this.data.blueprint)
 
-    if (blueprint.disabled) {
+    if (!blueprint) {
+      console.error(`Blueprint "${this.data.blueprint}" not found`)
+      // Forward to ErrorMonitor if available
+      if (this.world.errorMonitor) {
+        this.world.errorMonitor.captureError('app.blueprint.missing', [`Blueprint "${this.data.blueprint}" not found`], '')
+      }
+      crashed = true
+    }
+
+    if (blueprint && blueprint.disabled) {
       this.unbuild()
       this.blueprint = blueprint
       this.building = false
@@ -74,10 +83,10 @@ export class App extends Entity {
     // otherwise we can load the model and script
     else {
       try {
-        const type = blueprint.model && blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
-        let glb = this.world.loader.get(type, blueprint.model)
-        if (!glb) glb = await this.world.loader.load(type, blueprint.model)
-        root = glb.toNodes()
+        const type = blueprint && blueprint.model && blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
+        let glb = blueprint && blueprint.model ? this.world.loader.get(type, blueprint.model) : null
+        if (!glb && blueprint && blueprint.model) glb = await this.world.loader.load(type, blueprint.model)
+        if (glb) root = glb.toNodes()
       } catch (err) {
         console.error(err)
         // Forward to ErrorMonitor if available
@@ -88,7 +97,7 @@ export class App extends Entity {
         // no model, will use crash block below
       }
       // fetch script (if any)
-      if (blueprint.script) {
+      if (blueprint && blueprint.script) {
         try {
           script = this.world.loader.get('script', blueprint.script)
           if (!script) script = await this.world.loader.load('script', blueprint.script)
@@ -119,13 +128,15 @@ export class App extends Entity {
     // setup
     this.blueprint = blueprint
     this.root = root
-    if (!blueprint.scene) {
+    if (this.root && (!blueprint || !blueprint.scene)) {
       this.root.position.fromArray(this.data.position)
       this.root.quaternion.fromArray(this.data.quaternion)
       this.root.scale.fromArray(this.data.scale)
     }
     // activate
-    this.root.activate({ world: this.world, entity: this, moving: !!this.data.mover })
+    if (this.root) {
+      this.root.activate({ world: this.world, entity: this, moving: !!this.data.mover })
+    }
     // execute script
     const runScript =
       (this.mode === Modes.ACTIVE && script && !crashed) || (this.mode === Modes.MOVING && this.keepActive)
@@ -146,20 +157,24 @@ export class App extends Entity {
       this.world.setHot(this, true)
       // and we need a list of any snap points
       this.snaps = []
-      this.root.traverse(node => {
-        if (node.name === 'snap') {
-          this.snaps.push(node.worldPosition)
-        }
-      })
+      if (this.root) {
+        this.root.traverse(node => {
+          if (node.name === 'snap') {
+            this.snaps.push(node.worldPosition)
+          }
+        })
+      }
     }
     // if remote is moving, set up to receive network updates
-    this.networkPos = new LerpVector3(root.position, this.world.networkRate)
-    this.networkQuat = new LerpQuaternion(root.quaternion, this.world.networkRate)
-    this.networkSca = new LerpVector3(root.scale, this.world.networkRate)
+    if (root) {
+      this.networkPos = new LerpVector3(root.position, this.world.networkRate)
+      this.networkQuat = new LerpQuaternion(root.quaternion, this.world.networkRate)
+      this.networkSca = new LerpVector3(root.scale, this.world.networkRate)
+    }
     // execute any events we collected while building
     while (this.eventQueue.length) {
       const event = this.eventQueue[0]
-      if (event.version > this.blueprint.version) break // ignore future versions
+      if (this.blueprint && event.version > this.blueprint.version) break // ignore future versions
       this.eventQueue.shift()
       this.emit(event.name, event.data, event.networkId)
     }
@@ -368,7 +383,7 @@ export class App extends Entity {
   }
 
   onEvent(version, name, data, networkId) {
-    if (this.building || version > this.blueprint.version) {
+    if (this.building || (this.blueprint && version > this.blueprint.version)) {
       this.eventQueue.push({ version, name, data, networkId })
     } else {
       this.emit(name, data, networkId)
@@ -414,7 +429,7 @@ export class App extends Entity {
   getNodes() {
     // note: this is currently just used in the nodes tab in the app inspector
     // to get a clean hierarchy
-    if (!this.blueprint) return
+    if (!this.blueprint || !this.blueprint.model) return
     const type = this.blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
     let glb = this.world.loader.get(type, this.blueprint.model)
     if (!glb) return

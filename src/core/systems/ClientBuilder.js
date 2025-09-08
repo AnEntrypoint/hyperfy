@@ -186,7 +186,7 @@ export class ClientBuilder extends System {
     // unlink
     if (this.control.keyU.pressed && this.control.pointer.locked) {
       const entity = this.selected || this.getEntityAtReticle()
-      if (entity?.isApp) {
+      if (entity?.isApp && entity.blueprint) {
         this.select(null)
         // duplicate the blueprint
         const blueprint = {
@@ -256,7 +256,7 @@ export class ClientBuilder extends System {
       // if nothing selected, attempt to select
       if (!this.selected) {
         const entity = this.getEntityAtReticle()
-        if (entity?.isApp && !entity.data.pinned && !entity.blueprint.scene) this.select(entity)
+        if (entity?.isApp && !entity.data.pinned && !entity.blueprint?.scene) this.select(entity)
       }
       // if selected in grab mode, place
       else if (this.selected && this.mode === 'grab') {
@@ -269,7 +269,7 @@ export class ClientBuilder extends System {
         !this.gizmoActive
       ) {
         const entity = this.getEntityAtReticle()
-        if (entity?.isApp && !entity.data.pinned && !entity.blueprint.scene) this.select(entity)
+        if (entity?.isApp && !entity.data.pinned && !entity.blueprint?.scene) this.select(entity)
         else this.select(null)
       }
     }
@@ -286,10 +286,10 @@ export class ClientBuilder extends System {
       !this.control.controlLeft.down
     ) {
       const entity = this.selected || this.getEntityAtReticle()
-      if (entity?.isApp && !entity.blueprint.scene) {
+      if (entity?.isApp && !entity.blueprint?.scene) {
         let blueprintId = entity.data.blueprint
         // if unique, we also duplicate the blueprint
-        if (entity.blueprint.unique) {
+        if (entity.blueprint?.unique) {
           const blueprint = {
             id: uuid(),
             version: 0,
@@ -335,7 +335,7 @@ export class ClientBuilder extends System {
     // destroy
     if (this.control.keyX.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
-      if (entity?.isApp && !entity.data.pinned && !entity.blueprint.scene) {
+      if (entity?.isApp && !entity.data.pinned && !entity.blueprint?.scene) {
         this.select(null)
         this.addUndo({
           name: 'add-entity',
