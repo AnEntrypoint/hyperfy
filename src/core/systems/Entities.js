@@ -3,6 +3,9 @@ import { PlayerLocal } from '../entities/PlayerLocal'
 import { PlayerRemote } from '../entities/PlayerRemote'
 import { System } from './System'
 
+// Import validation system to prevent entities with invalid blueprints
+let hyperfyEntityValidation = null
+
 const Types = {
   app: App,
   playerLocal: PlayerLocal,
@@ -36,6 +39,20 @@ export class Entities extends System {
   }
 
   add(data, local) {
+    // CRITICAL FIX: Validate blueprint exists before creating entity
+    // This prevents the core issue where entities persist with invalid blueprint references
+    if (hyperfyEntityValidation && data.type === 'app' && data.blueprint) {
+      const validation = hyperfyEntityValidation.validateEntityCreation(this.world, data)
+      if (!validation.valid) {
+        console.error('🚫 Entity creation rejected:', validation.error)
+        if (local && this.world.network && this.world.network.send) {
+          this.world.network.send('entityCreationFailed', validation.error)
+        }
+        return null // Don't create the entity
+      }
+    }
+    
+    // Proceed with entity creation only if validation passed
     let Entity
     if (data.type === 'player') {
       Entity = Types[data.owner === this.world.network.id ? 'playerLocal' : 'playerRemote']
