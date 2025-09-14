@@ -499,7 +499,7 @@ export class ServerNetwork extends System {
     const entity = this.world.entities.get(id)
     this.world.entities.remove(id)
     this.send('entityRemoved', id, socket.id)
-    if (entity.isApp) this.dirtyApps.add(id)
+    if (entity && entity.isApp) this.dirtyApps.add(id)
   }
 
   onSettingsModified = (socket, data) => {
