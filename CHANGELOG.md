@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- hypersdk: Fixed import paths from ../../hyperfy/ to ../../ to match actual directory structure
+- hypersdk: Replaced deprecated rollup-plugin-terser with @rollup/plugin-terser to resolve peer dependency conflicts
+- hypersdk: Added missing dependencies (glob, uuid, three, form-data, fs-extra)
+- hypersdk: Fixed all core re-export paths (Packets.js, extras/*.js)
+- hypersdk: Created node_modules symlink workaround for WSL filesystem permission issues
 
 ## [v0.15.0]
 
