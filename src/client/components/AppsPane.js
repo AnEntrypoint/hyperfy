@@ -21,10 +21,10 @@ import {
   ZapIcon,
 } from 'lucide-react'
 
-import { usePane } from './usePane'
-import { cls } from './cls'
+import { usePane } from './usePane.js'
+import { cls } from './cls.js'
 import { orderBy } from 'lodash-es'
-import { formatBytes } from '../../core/extras/formatBytes'
+import { formatBytes } from '../../core/extras/formatBytes.js'
 
 export function AppsPane({ world, close }) {
   const paneRef = useRef()

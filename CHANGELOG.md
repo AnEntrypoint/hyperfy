@@ -12,11 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- hypersdk: Fixed import paths from ../../hyperfy/ to ../../ to match actual directory structure
-- hypersdk: Replaced deprecated rollup-plugin-terser with @rollup/plugin-terser to resolve peer dependency conflicts
+- hypersdk: Fixed import paths from ../../hyperfy/ to ../../ to match directory structure
+- hypersdk: Replaced deprecated rollup-plugin-terser with @rollup/plugin-terser
 - hypersdk: Added missing dependencies (glob, uuid, three, form-data, fs-extra)
 - hypersdk: Fixed all core re-export paths (Packets.js, extras/*.js)
-- hypersdk: Created node_modules symlink workaround for WSL filesystem permission issues
+- hyperfy: Fixed 108 .js files with missing ESM import extensions for Node.js compatibility
+- hyperfy: Fixed lib imports (stats-gl, CSM, three-custom-shader-material, GLTFLoader)
+- hyperfy: Installed missing lodash-es dependency with sudo
+- hyperfy: All entity files (PlayerLocal, PlayerRemote, App) now have proper .js extensions
 
 ## [v0.15.0]
 

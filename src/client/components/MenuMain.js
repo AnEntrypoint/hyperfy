@@ -10,9 +10,9 @@ import {
   MenuItemText,
   MenuItemTextarea,
   MenuItemToggle,
-} from './Menu'
-import { usePermissions } from './usePermissions'
-import { useFullscreen } from './useFullscreen'
+} from './Menu.js'
+import { usePermissions } from './usePermissions.js'
+import { useFullscreen } from './useFullscreen.js'
 
 export function MenuMain({ world }) {
   const [pages, setPages] = useState(() => ['index'])

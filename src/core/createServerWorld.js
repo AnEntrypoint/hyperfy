@@ -1,12 +1,12 @@
-import { World } from './World'
+import { World } from './World.js'
 
-import { Server } from './systems/Server'
-import { ServerLiveKit } from './systems/ServerLiveKit'
-import { ServerNetwork } from './systems/ServerNetwork'
-import { ServerLoader } from './systems/ServerLoader'
-import { ServerEnvironment } from './systems/ServerEnvironment'
-import { ServerMonitor } from './systems/ServerMonitor'
-import { ErrorMonitor } from './systems/ErrorMonitor'
+import { Server } from './systems/Server.js'
+import { ServerLiveKit } from './systems/ServerLiveKit.js'
+import { ServerNetwork } from './systems/ServerNetwork.js'
+import { ServerLoader } from './systems/ServerLoader.js'
+import { ServerEnvironment } from './systems/ServerEnvironment.js'
+import { ServerMonitor } from './systems/ServerMonitor.js'
+import { ErrorMonitor } from './systems/ErrorMonitor.js'
 
 export function createServerWorld() {
   const world = new World()
