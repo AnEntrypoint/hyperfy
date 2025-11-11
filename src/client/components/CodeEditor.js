@@ -14,9 +14,9 @@ import {
   Rows3Icon,
   XIcon,
 } from 'lucide-react'
-import { hashFile } from '../../core/utils-client'
-import { storage } from '../../core/storage'
-import { cls } from './cls'
+import { hashFile } from '../../core/utils-client.js'
+import { storage } from '../../core/storage.js'
+import { cls } from './cls.js'
 
 export function CodeEditor({ app, blur, onClose }) {
   const containerRef = useRef()

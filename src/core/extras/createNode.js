@@ -1,4 +1,4 @@
-import * as Nodes from '../nodes'
+import * as Nodes from '../nodes.js'
 
 export function createNode(name, data) {
   const Node = Nodes[name]

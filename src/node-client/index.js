@@ -6,6 +6,6 @@ import { fileURLToPath } from 'url'
 // support `__dirname` in ESM
 globalThis.__dirname = path.dirname(fileURLToPath(import.meta.url))
 
-export { createNodeClientWorld } from '../core/createNodeClientWorld'
-export { System } from '../core/systems/System'
-export { storage } from '../core/storage'
+export { createNodeClientWorld } from '../core/createNodeClientWorld.js'
+export { System } from '../core/systems/System.js'
+export { storage } from '../core/storage.js'

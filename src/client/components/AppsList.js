@@ -15,9 +15,9 @@ import {
   TriangleIcon,
 } from 'lucide-react'
 
-import { cls } from './cls'
+import { cls } from './cls.js'
 import { orderBy } from 'lodash-es'
-import { formatBytes } from '../../core/extras/formatBytes'
+import { formatBytes } from '../../core/extras/formatBytes.js'
 
 const defaultStats = {
   geometries: 0,

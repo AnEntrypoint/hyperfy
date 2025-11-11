@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { css } from '@firebolt-dev/css'
 
-import { curveManager } from '../../core/extras/curveManager'
-import { usePane } from './usePane'
+import { curveManager } from '../../core/extras/curveManager.js'
+import { usePane } from './usePane.js'
 
 export function CurvePane({ curve, title, xLabel, yLabel, yMin, yMax, onCommit, onCancel }) {
   const paneRef = useRef()

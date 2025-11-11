@@ -1,12 +1,12 @@
 import moment from 'moment'
-import { writePacket } from '../packets'
-import { Socket } from '../Socket'
-import { uuid } from '../utils'
-import { System } from './System'
-import { createJWT, readJWT } from '../utils-server'
+import { writePacket } from '../packets.js'
+import { Socket } from '../Socket.js'
+import { uuid } from '../utils.js'
+import { System } from './System.js'
+import { createJWT, readJWT } from '../utils-server.js'
 import { cloneDeep, isNumber } from 'lodash-es'
-import * as THREE from '../extras/three'
-import { Ranks } from '../extras/ranks'
+import * as THREE from '../extras/three.js'
+import { Ranks } from '../extras/ranks.js'
 
 const SAVE_INTERVAL = parseInt(process.env.SAVE_INTERVAL || '60') // seconds
 const PING_RATE = 1 // seconds

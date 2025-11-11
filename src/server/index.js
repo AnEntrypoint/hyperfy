@@ -12,11 +12,11 @@ import compress from '@fastify/compress'
 import statics from '@fastify/static'
 import multipart from '@fastify/multipart'
 
-import { createServerWorld } from '../core/createServerWorld'
-import { hashFile } from '../core/utils-server'
-import { getDB } from './db'
-import { Storage } from './Storage'
-import { initCollections } from './collections'
+import { createServerWorld } from '../core/createServerWorld.js'
+import { hashFile } from '../core/utils-server.js'
+import { getDB } from './db.js'
+import { Storage } from './Storage.js'
+import { initCollections } from './collections.js'
 
 const rootDir = path.join(__dirname, '../')
 const worldDir = path.join(rootDir, process.env.WORLD)

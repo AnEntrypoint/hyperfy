@@ -14,10 +14,10 @@ import {
   MenuItemToggle,
   MenuLine,
   MenuSection,
-} from './Menu'
-import { exportApp } from '../../core/extras/appTools'
-import { downloadFile } from '../../core/extras/downloadFile'
-import { hashFile } from '../../core/utils-client'
+} from './Menu.js'
+import { exportApp } from '../../core/extras/appTools.js'
+import { downloadFile } from '../../core/extras/downloadFile.js'
+import { hashFile } from '../../core/utils-client.js'
 import { isArray, isBoolean } from 'lodash-es'
 import { css } from '@firebolt-dev/css'
 

@@ -1,5 +1,5 @@
 import { css } from '@firebolt-dev/css'
-import { MenuIcon, MicIcon, MicOffIcon, SettingsIcon, VRIcon } from './Icons'
+import { MenuIcon, MicIcon, MicOffIcon, SettingsIcon, VRIcon } from './Icons.js'
 import {
   BookTextIcon,
   BoxIcon,
@@ -33,7 +33,7 @@ import {
   HammerIcon,
   CircleArrowRightIcon,
 } from 'lucide-react'
-import { cls } from './cls'
+import { cls } from './cls.js'
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FieldBtn,
@@ -46,23 +46,23 @@ import {
   FieldTextarea,
   FieldToggle,
   FieldVec3,
-} from './Fields'
-import { HintContext, HintProvider } from './Hint'
-import { useFullscreen } from './useFullscreen'
-import { downloadFile } from '../../core/extras/downloadFile'
-import { exportApp } from '../../core/extras/appTools'
-import { hashFile } from '../../core/utils-client'
+} from './Fields.js'
+import { HintContext, HintProvider } from './Hint.js'
+import { useFullscreen } from './useFullscreen.js'
+import { downloadFile } from '../../core/extras/downloadFile.js'
+import { exportApp } from '../../core/extras/appTools.js'
+import { hashFile } from '../../core/utils-client.js'
 import { cloneDeep, isArray, isBoolean, sortBy } from 'lodash-es'
-import { storage } from '../../core/storage'
-import { ScriptEditor } from './ScriptEditor'
-import { NodeHierarchy } from './NodeHierarchy'
-import { AppsList } from './AppsList'
-import { DEG2RAD, RAD2DEG } from '../../core/extras/general'
-import * as THREE from '../../core/extras/three'
-import { isTouch } from '../utils'
-import { uuid } from '../../core/utils'
-import { useRank } from './useRank'
-import { Ranks } from '../../core/extras/ranks'
+import { storage } from '../../core/storage.js'
+import { ScriptEditor } from './ScriptEditor.js'
+import { NodeHierarchy } from './NodeHierarchy.js'
+import { AppsList } from './AppsList.js'
+import { DEG2RAD, RAD2DEG } from '../../core/extras/general.js'
+import * as THREE from '../../core/extras/three.js'
+import { isTouch } from '../utils.js'
+import { uuid } from '../../core/utils.js'
+import { useRank } from './useRank.js'
+import { Ranks } from '../../core/extras/ranks.js'
 
 const mainSectionPanes = ['prefs']
 const worldSectionPanes = ['world', 'docs', 'apps', 'add']
