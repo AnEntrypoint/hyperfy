@@ -243,9 +243,12 @@ export class HyperfyClient extends EventEmitter {
     this.entities.clear()
     if (data.entities) {
       data.entities.forEach(entityData => {
-        if (entityData.type === 'player' && entityData.id === data.id) {
-          this.player = new Player(this, entityData)
-          this.entities.set(entityData.id, this.player)
+        if (entityData.type === 'player') {
+          const player = new Player(this, entityData)
+          this.entities.set(entityData.id, player)
+          if (entityData.id === data.id) {
+            this.player = player
+          }
         } else if (entityData.type === 'app') {
           const app = new App(this, entityData)
           this.entities.set(entityData.id, app)
